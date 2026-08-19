@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+  :root{
+    --page:#f9f9f7; --card:#ffffff; --text-primary:#0b0b0b; --text-secondary:#52514e;
+    --text-muted:#898781; --border:rgba(11,11,11,0.10); --grid:#e1e0d9;
+    --series-1:#2a78d6; --series-2:#eb6834; --series-3:#1baf7a; --warning:#fab219;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    width:1200px;height:630px;background:var(--page);color:var(--text-primary);
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.4;
+    padding:62px 68px;display:flex;flex-direction:column;justify-content:space-between;
+    position:relative;overflow:hidden;
+  }
+  .sun{
+    position:absolute;top:-130px;right:-130px;width:420px;height:420px;border-radius:50%;
+    background:radial-gradient(circle,rgba(250,178,25,0.22) 0%,rgba(250,178,25,0.06) 55%,rgba(250,178,25,0) 72%);
+  }
+  .eyebrow{
+    display:flex;align-items:center;gap:11px;font-size:19px;font-weight:600;
+    color:var(--text-secondary);letter-spacing:.02em;text-transform:uppercase;
+  }
+  .eyebrow .dot{width:13px;height:13px;border-radius:4px;background:var(--warning);flex:none}
+  h1{font-size:73px;letter-spacing:-0.028em;line-height:1.03;margin:22px 0 20px;font-weight:680}
+  p.sub{font-size:26px;color:var(--text-secondary);max-width:830px;line-height:1.42}
+  .stats{display:flex;gap:15px;margin-top:6px}
+  .stat{
+    background:var(--card);border:1px solid var(--border);border-radius:14px;
+    padding:17px 22px;flex:1;
+  }
+  .stat .label{font-size:15.5px;color:var(--text-secondary);margin-bottom:5px}
+  .stat .value{font-size:30px;font-weight:660;letter-spacing:-0.015em}
+  .stat .value span{font-size:19px;font-weight:550;color:var(--text-muted);margin-left:3px}
+  .bar-wrap{margin-top:24px}
+  .legend{display:flex;gap:26px;font-size:17px;color:var(--text-secondary);margin-bottom:11px}
+  .legend .i{display:flex;align-items:center;gap:8px}
+  .legend .sw{width:12px;height:12px;border-radius:4px;flex:none}
+  .stackbar{display:flex;height:40px;border-radius:10px;overflow:hidden;background:var(--grid)}
+  .seg{height:100%;display:flex;align-items:center;justify-content:center;color:#fff;
+       font-size:16px;font-weight:640;border-right:3px solid var(--page)}
+  .seg:last-child{border-right:none}
+</style></head>
+<body>
+  <div class="sun"></div>
+  <div>
+    <div class="eyebrow"><span class="dot"></span>Interactive planning tool</div>
+    <h1>Solar Home Power Planner</h1>
+    <p class="sub">Size the panels, batteries, and inverter for a home running on solar — then see what bitcoin mining or EV charging really costs you.</p>
+  </div>
+  <div>
+    <div class="bar-wrap">
+      <div class="legend">
+        <div class="i"><span class="sw" style="background:var(--series-1)"></span>Home</div>
+        <div class="i"><span class="sw" style="background:var(--series-2)"></span>Mining</div>
+        <div class="i"><span class="sw" style="background:var(--series-3)"></span>EV charging</div>
+      </div>
+      <div class="stackbar">
+        <div class="seg" style="background:var(--series-1);width:33.7%">30 kWh</div>
+        <div class="seg" style="background:var(--series-2);width:55.1%">49 kWh</div>
+        <div class="seg" style="background:var(--series-3);width:11.2%">10 kWh</div>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="label">Total daily energy</div><div class="value">89<span>kWh</span></div></div>
+      <div class="stat"><div class="label">Solar array needed</div><div class="value">39.8<span>kW</span></div></div>
+      <div class="stat"><div class="label">Battery bank</div><div class="value">148<span>kWh</span></div></div>
+      <div class="stat"><div class="label">Est. system cost</div><div class="value">$252k</div></div>
+    </div>
+  </div>
+</body></html>

@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solar Home Power Planner - size a home solar + battery system</title>
+<meta name="description" content="Interactive planner that sizes the solar array, battery bank, and inverter for a home running on solar - and shows what bitcoin mining or EV charging adds to the system.">
+<link rel="canonical" href="https://solar-power-planner.netlify.app/">
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNyIgZmlsbD0iIzBiMGIwYiIvPjxjaXJjbGUgY3g9IjE2IiBjeT0iMTEiIHI9IjUiIGZpbGw9IiNmYWIyMTkiLz48ZyBzdHJva2U9IiNmYWIyMTkiIHN0cm9rZS13aWR0aD0iMS45IiBzdHJva2UtbGluZWNhcD0icm91bmQiPjxwYXRoIGQ9Ik0xNiAyLjh2Mk0xNiAxNy4ydjJNOC40IDExaC0yTTI1LjYgMTFoLTJNMTAuNCA1LjQgOSA0TTIxLjYgNS40IDIzIDQiLz48L2c+PHBhdGggZD0iTTUuOCAyNy4ybDMuMy02LjRoMTMuOGwzLjMgNi40eiIgZmlsbD0iIzJhNzhkNiIvPjxnIHN0cm9rZT0iIzBiMGIwYiIgc3Ryb2tlLXdpZHRoPSIxLjE1IiBvcGFjaXR5PSIuNSI+PHBhdGggZD0iTTEyLjUgMjAuOCAxMC43IDI3LjJNMTkuNSAyMC44bDEuOCA2LjRNNy42IDI0aDE2LjgiLz48L2c+PC9zdmc+Cg==">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Solar Home Power Planner">
+<meta property="og:title" content="Solar Home Power Planner">
+<meta property="og:description" content="Interactive planner that sizes the solar array, battery bank, and inverter for a home running on solar - and shows what bitcoin mining or EV charging adds to the system.">
+<meta property="og:url" content="https://solar-power-planner.netlify.app/">
+<meta property="og:image" content="https://solar-power-planner.netlify.app/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Solar Home Power Planner - a stacked bar splitting daily energy across home, mining and EV loads, with system sizing stats.">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Solar Home Power Planner">
+<meta name="twitter:description" content="Interactive planner that sizes the solar array, battery bank, and inverter for a home running on solar - and shows what bitcoin mining or EV charging adds to the system.">
+<meta name="twitter:image" content="https://solar-power-planner.netlify.app/og-image.png">
+<meta name="theme-color" content="#f9f9f7">
+<style>
+  .viz-root {
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --page:           #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --grid:           #e1e0d9;
+    --baseline:       #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --series-1:       #2a78d6; /* home baseline */
+    --series-2:       #eb6834; /* mining */
+    --series-3:       #1baf7a; /* EV */
+    --good:           #0ca30c;
+    --warning:        #fab219;
+    --critical:       #d03b3b;
+    --card:           #ffffff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--page);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.45;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 32px 20px 80px; }
+  header.top { margin-bottom: 28px; }
+  header.top h1 { font-size: 28px; margin: 0 0 6px; letter-spacing: -0.01em; }
+  header.top p { color: var(--text-secondary); margin: 0; font-size: 15px; max-width: 640px; }
+
+  section { margin-bottom: 30px; }
+  .section-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+  .section-head .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--text-primary); color: var(--surface-1);
+    font-size: 12px; font-weight: 600; flex: none;
+  }
+  .section-head h2 { font-size: 17px; margin: 0; }
+  .section-sub { color: var(--text-secondary); font-size: 13.5px; margin: 0 0 14px 32px; max-width: 620px; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 12px;
+  }
+  .card + .card { margin-top: 12px; }
+  .card-title-row { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom: 10px;}
+  .card-title { font-size: 14.5px; font-weight: 600; display:flex; align-items:center; gap:8px;}
+  .swatch { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+  .card-note { color: var(--text-muted); font-size: 12.5px; margin-top: 6px; }
+
+  .row { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+  .field { display: flex; flex-direction: column; gap: 4px; flex: 1 1 200px; }
+  .field label { font-size: 12.5px; color: var(--text-secondary); font-weight: 500; }
+  .field .val { font-variant-numeric: tabular-nums; font-weight: 600; font-size: 13px; }
+  input[type=range] { width: 100%; accent-color: var(--series-1); }
+  select, input[type=number] {
+    font-family: inherit; font-size: 13.5px; padding: 7px 9px;
+    border-radius: 7px; border: 1px solid var(--border); background: var(--surface-1);
+    color: var(--text-primary);
+  }
+
+  .switch { position: relative; width: 38px; height: 22px; flex: none; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider-toggle {
+    position: absolute; cursor: pointer; inset: 0; background: var(--baseline);
+    border-radius: 999px; transition: background .15s;
+  }
+  .slider-toggle:before {
+    content: ""; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px;
+    background: white; border-radius: 50%; transition: transform .15s;
+  }
+  input:checked + .slider-toggle { background: var(--good); }
+  input:checked + .slider-toggle:before { transform: translateX(16px); }
+
+  .disabled-fade { opacity: 0.4; pointer-events: none; transition: opacity .15s; }
+
+  /* stat tiles */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 10px; margin-bottom: 16px; }
+  .stat {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .stat .label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+  .stat .value { font-size: 22px; font-weight: 650; letter-spacing: -0.01em; }
+  .stat .sub { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+
+  /* stacked bar */
+  .bar-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 10px; font-size: 12.5px; color: var(--text-secondary); }
+  .bar-legend .item { display:flex; align-items:center; gap:6px; }
+  .stackbar {
+    display: flex; height: 34px; width: 100%; border-radius: 8px; overflow: hidden;
+    background: var(--grid);
+  }
+  .seg {
+    height: 100%; display:flex; align-items:center; justify-content:center;
+    color: white; font-size: 11.5px; font-weight: 600; white-space:nowrap; overflow:hidden;
+    border-right: 2px solid var(--surface-1);
+    transition: width .2s;
+  }
+  .seg:last-child { border-right: none; }
+  .seg[data-empty="1"] { display:none; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table caption { text-align:left; font-size: 13px; font-weight:600; margin-bottom:8px; color: var(--text-primary);}
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--grid); }
+  th { color: var(--text-secondary); font-weight: 600; font-size: 12px; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  .concept-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(210px,1fr)); gap:12px; }
+  .concept { background: var(--card); border:1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .concept .t { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+  .concept .d { font-size: 12.5px; color: var(--text-secondary); }
+
+  details.refs { background: var(--card); border:1px solid var(--border); border-radius: 12px; padding: 14px 18px; }
+  details.refs summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+  details.refs[open] summary { margin-bottom: 10px; }
+  .refs-tables { display:grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 14px;}
+  @media (max-width: 720px) { .refs-tables { grid-template-columns: 1fr; } }
+
+  .callout {
+    border-radius: 12px; padding: 14px 18px; font-size: 13.5px; border: 1px solid var(--border);
+  }
+  .callout.good { background: rgba(12,163,12,0.07); }
+  .callout.warn { background: rgba(250,178,25,0.10); }
+  .callout.crit { background: rgba(208,59,59,0.07); }
+
+  footer { color: var(--text-muted); font-size: 12px; margin-top: 36px; border-top: 1px solid var(--border); padding-top: 16px; }
+  footer a { color: var(--text-secondary); }
+
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root {
+      color-scheme: dark;
+      --surface-1: #1a1a19; --page:#0d0d0d; --text-primary:#ffffff; --text-secondary:#c3c2b7;
+      --text-muted:#898781; --grid:#2c2c2a; --baseline:#383835; --border: rgba(255,255,255,0.10);
+      --series-1:#3987e5; --series-2:#d95926; --series-3:#199e70; --good:#0ca30c; --card:#151514;
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    color-scheme: dark;
+    --surface-1: #1a1a19; --page:#0d0d0d; --text-primary:#ffffff; --text-secondary:#c3c2b7;
+    --text-muted:#898781; --grid:#2c2c2a; --baseline:#383835; --border: rgba(255,255,255,0.10);
+    --series-1:#3987e5; --series-2:#d95926; --series-3:#199e70; --good:#0ca30c; --card:#151514;
+  }
+</style>
+</head>
+<body class="viz-root">
+<div class="wrap">
+
+  <header class="top">
+    <h1>Solar Home Power Planner</h1>
+    <p>A working model to explore what it takes to power a home with solar &amp; batteries — and what happens when you add big loads like bitcoin mining or EV charging. Adjust anything below; everything recalculates live. Figures are ballpark planning numbers, not an engineering design.</p>
+  </header>
+
+  <section>
+    <div class="section-head"><span class="num">1</span><h2>The four numbers that drive everything</h2></div>
+    <p class="section-sub">Every solar decision comes back to these. Get comfortable with them and the rest of this page is just arithmetic.</p>
+    <div class="concept-grid">
+      <div class="concept"><div class="t">kWh vs. kW</div><div class="d">kW is a rate (how fast you draw power right now). kWh is an amount (energy used over time). Your daily need is measured in kWh/day; your equipment is rated in kW.</div></div>
+      <div class="concept"><div class="t">Peak sun hours</div><div class="d">Not daylight hours — the equivalent hours per day of full-intensity (1000 W/m²) sun. A region with "4.3 peak sun hours" might see 14 hours of daylight but only 4.3 hours' worth of full-strength sun.</div></div>
+      <div class="concept"><div class="t">System losses</div><div class="d">Wiring resistance, inverter conversion, panel heat derating, dust, and imperfect angle typically cost 15–25% of rated output. This model uses a 0.80 derate by default.</div></div>
+      <div class="concept"><div class="t">Depth of discharge & autonomy</div><div class="d">Batteries shouldn't be fully drained (10% is reserved here). "Days of autonomy" is how many cloudy days in a row you want to ride out on stored charge alone.</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="num">2</span><h2>Build your loads</h2></div>
+    <p class="section-sub">Start with the home. Flip on mining or EV charging to see how they change the picture — leave both off to see a plain whole-home system.</p>
+
+    <div class="card">
+      <div class="card-title-row">
+        <div class="card-title"><span class="swatch" style="background:var(--series-1)"></span>Whole-home baseline</div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="homeKwh">Daily household usage (kWh/day) <span class="val" id="homeKwhVal"></span></label>
+          <input type="range" id="homeKwh" min="10" max="70" step="1" value="30">
+        </div>
+      </div>
+      <div class="card-note">US average is ~29.6 kWh/day (10,791 kWh/yr per household, EIA). A well-insulated efficient home can run 15–20 kWh/day; a large home with electric heat, a pool, or a workshop can easily exceed 50. See the appliance table below to build your own estimate.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title-row">
+        <div class="card-title"><span class="swatch" style="background:var(--series-2)"></span>Bitcoin mining rig</div>
+        <label class="switch"><input type="checkbox" id="miningOn"><span class="slider-toggle"></span></label>
+      </div>
+      <div class="row" id="miningFields">
+        <div class="field">
+          <label for="miningUnits">Miners (Antminer S21, 3,500 W each) <span class="val" id="miningUnitsVal"></span></label>
+          <input type="range" id="miningUnits" min="1" max="20" step="1" value="1">
+        </div>
+        <div class="field">
+          <label for="miningHours">Hours running per day <span class="val" id="miningHoursVal"></span></label>
+          <input type="range" id="miningHours" min="1" max="24" step="1" value="24">
+        </div>
+      </div>
+      <div class="card-note">ASIC miners run flat-out, continuously, with almost no daily variation — the opposite load shape from a house. One S21 running 24/7 uses about as much energy as 2–3 average homes combined.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title-row">
+        <div class="card-title"><span class="swatch" style="background:var(--series-3)"></span>EV charging (Tesla Model 3)</div>
+        <label class="switch"><input type="checkbox" id="evOn"><span class="slider-toggle"></span></label>
+      </div>
+      <div class="row" id="evFields">
+        <div class="field">
+          <label for="evModel">Battery / charger</label>
+          <select id="evModel">
+            <option value="sr">Standard Range — 57.5 kWh pack, 7.7 kW (32A) home charger</option>
+            <option value="lr">Long Range/Performance — 82 kWh pack, 11.5 kW (48A) home charger</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="evMiles">Miles driven per day <span class="val" id="evMilesVal"></span></label>
+          <input type="range" id="evMiles" min="0" max="120" step="5" value="40">
+        </div>
+      </div>
+      <div class="card-note">Estimated at ~250 Wh/mile. The charger's kW rating only matters for a few hours while plugged in — it doesn't add to your all-day baseline the way mining does, but it does affect the peak-load number below if it overlaps other big draws.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="num">3</span><h2>Your climate</h2></div>
+    <p class="section-sub">Sun hours vary a lot by region and by season — this is usually the single biggest lever on system size.</p>
+    <div class="card">
+      <div class="row">
+        <div class="field">
+          <label for="region">Region type</label>
+          <select id="region">
+            <option value="5.75">Sunbelt (AZ, NM, TX, CA, FL…) — ~5.75 peak sun hrs</option>
+            <option value="4.3" selected>Temperate / mixed (most of the US) — ~4.3 peak sun hrs</option>
+            <option value="3.5">Northern / cloudy (Pacific NW, New England…) — ~3.5 peak sun hrs</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div class="field" id="customSunWrap" style="display:none;">
+          <label for="customSun">Custom peak sun hours</label>
+          <input type="number" id="customSun" min="1" max="8" step="0.1" value="4.3">
+        </div>
+        <div class="field">
+          <label for="season">Season to plan for</label>
+          <select id="season">
+            <option value="1">Annual average</option>
+            <option value="1.15">Summer (best case, roughly +15%)</option>
+            <option value="0.65" selected>Winter (worst case, roughly −35%)</option>
+          </select>
+        </div>
+      </div>
+      <div class="card-note">Sizing for winter (the default here) is the conservative, off-grid-honest choice — summer surplus is a bonus, not something to plan around. Effective peak sun hours used below: <strong id="effSunOut"></strong></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="num">4</span><h2>Results</h2></div>
+    <p class="section-sub">Everything above rolls up into a system size. These are planning-grade estimates for comparing scenarios, not a permit-ready design.</p>
+
+    <div class="stats">
+      <div class="stat"><div class="label">Total daily energy</div><div class="value" id="statTotalKwh">–</div><div class="sub">kWh / day, all loads</div></div>
+      <div class="stat"><div class="label">Peak simultaneous load</div><div class="value" id="statPeakKw">–</div><div class="sub">sets your inverter size</div></div>
+      <div class="stat"><div class="label">Solar array needed</div><div class="value" id="statArrayKw">–</div><div class="sub" id="statArraySub">kW DC</div></div>
+      <div class="stat"><div class="label">Battery bank needed</div><div class="value" id="statBattKwh">–</div><div class="sub" id="statBattSub">kWh usable</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title-row"><div class="card-title">Where the energy goes</div></div>
+      <div class="bar-legend" id="barLegend"></div>
+      <div class="stackbar" id="stackbar"></div>
+    </div>
+
+    <div class="row" style="align-items:stretch; margin-bottom:12px;">
+      <div class="card" style="flex:1 1 300px;">
+        <div class="card-title-row"><div class="card-title">Array sizing assumptions</div></div>
+        <div class="row">
+          <div class="field">
+            <label for="panelW">Panel size (W) <span class="val" id="panelWVal"></span></label>
+            <input type="range" id="panelW" min="300" max="500" step="10" value="400">
+          </div>
+          <div class="field">
+            <label for="derate">System derate <span class="val" id="derateVal"></span></label>
+            <input type="range" id="derate" min="0.65" max="0.9" step="0.01" value="0.80">
+          </div>
+        </div>
+        <div class="card-note" id="panelCountOut"></div>
+      </div>
+      <div class="card" style="flex:1 1 300px;">
+        <div class="card-title-row"><div class="card-title">Battery sizing assumptions</div></div>
+        <div class="row">
+          <div class="field">
+            <label for="autonomy">Days of autonomy <span class="val" id="autonomyVal"></span></label>
+            <input type="range" id="autonomy" min="0.5" max="5" step="0.5" value="1.5">
+          </div>
+        </div>
+        <div class="card-note" id="powerwallCountOut"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title-row"><div class="card-title">Rough cost, before incentives</div></div>
+      <div class="stats" style="margin-bottom:0;">
+        <div class="stat"><div class="label">Panels + install</div><div class="value" id="costPanels">–</div><div class="sub">~$2.60/W installed, 2026 avg</div></div>
+        <div class="stat"><div class="label">Battery bank</div><div class="value" id="costBattery">–</div><div class="sub">~$998/kWh usable (Powerwall 3 class)</div></div>
+        <div class="stat"><div class="label">Total system</div><div class="value" id="costTotal">–</div><div class="sub">excludes mining/EV hardware itself</div></div>
+      </div>
+    </div>
+
+    <div class="callout" id="feasibilityNote"></div>
+  </section>
+
+  <section>
+    <details class="refs">
+      <summary>Reference tables</summary>
+      <div class="refs-tables">
+        <div>
+          <table>
+            <caption>Typical appliance draw</caption>
+            <thead><tr><th>Appliance</th><th class="num">Running W</th></tr></thead>
+            <tbody>
+              <tr><td>Fridge (ENERGY STAR)</td><td class="num">100–200</td></tr>
+              <tr><td>Central AC (3-ton)</td><td class="num">3,000–4,000</td></tr>
+              <tr><td>Window AC (10k BTU)</td><td class="num">1,000–1,200</td></tr>
+              <tr><td>Electric water heater</td><td class="num">4,500–5,500</td></tr>
+              <tr><td>Electric dryer</td><td class="num">1,800–5,000</td></tr>
+              <tr><td>Electric range/oven</td><td class="num">2,000–3,500</td></tr>
+              <tr><td>Dishwasher</td><td class="num">1,200–2,400</td></tr>
+              <tr><td>Washing machine</td><td class="num">350–500</td></tr>
+              <tr><td>Microwave</td><td class="num">750–1,100</td></tr>
+              <tr><td>Well pump (½ HP)</td><td class="num">800–1,050</td></tr>
+              <tr><td>Space heater</td><td class="num">1,500</td></tr>
+              <tr><td>55" LED TV</td><td class="num">70–120</td></tr>
+              <tr><td>LED bulb</td><td class="num">8–10</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <table>
+            <caption>Peak sun hours (annual avg, selected states)</caption>
+            <thead><tr><th>State</th><th class="num">Hrs/day</th></tr></thead>
+            <tbody>
+              <tr><td>Arizona / New Mexico</td><td class="num">6.0–6.5</td></tr>
+              <tr><td>California / Nevada</td><td class="num">5.5–6.0</td></tr>
+              <tr><td>Texas / Florida</td><td class="num">5.0–5.5</td></tr>
+              <tr><td>Missouri / Kentucky / Tennessee</td><td class="num">4.3–4.6</td></tr>
+              <tr><td>Virginia / Maryland</td><td class="num">4.4–4.5</td></tr>
+              <tr><td>Illinois / Iowa / Wisconsin</td><td class="num">4.2–4.4</td></tr>
+              <tr><td>Ohio / Pennsylvania / W. Virginia</td><td class="num">4.1</td></tr>
+              <tr><td>Michigan</td><td class="num">4.0</td></tr>
+              <tr><td>Pacific NW / New England</td><td class="num">3.0–3.5</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p class="card-note" style="margin-top:14px;">National average is about 5.0 peak sun hours/day. Winter daily solar gain typically runs 25–50% below the annual figure — the "Winter" season option above uses a 35% cut as a middle-of-the-road planning number.</p>
+    </details>
+  </section>
+
+  <footer>
+    <p><strong>How to read this:</strong> this tool models daily energy balance, not minute-by-minute engineering (real designs also account for roof orientation/shading, inverter clipping, panel degradation over time, local code, and utility interconnection rules). Treat every number here as a starting point for a conversation with a licensed solar installer, not a final design.</p>
+    <p>Sources: <a href="https://www.eia.gov/tools/faqs/faq.php?id=97&t=3" target="_blank">EIA — average household electricity use</a> · <a href="https://www.unboundsolar.com/solar-information/sun-hours-us-map" target="_blank">Unbound Solar — peak sun hours by state</a> · <a href="https://www.energysage.com/energy-storage/best-home-batteries/tesla-powerwall-battery-complete-review/" target="_blank">EnergySage — Powerwall 3 specs &amp; pricing</a> · <a href="https://wattbunker.com/blog/appliance-wattage-chart" target="_blank">WattBunker — appliance wattage chart</a> · <a href="https://viperatech.com/product/bitmain-antminer-s21-200th-s-3500w" target="_blank">Antminer S21 specs</a> · <a href="https://www.electrifycalc.site/guides/tesla-model-3-home-charging-guide" target="_blank">Tesla Model 3 battery &amp; home charging guide</a> · <a href="https://www.energysage.com/local-data/solar-panel-cost/" target="_blank">EnergySage — 2026 solar cost per watt</a></p>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+
+  const els = {
+    homeKwh: $('homeKwh'), homeKwhVal: $('homeKwhVal'),
+    miningOn: $('miningOn'), miningFields: $('miningFields'),
+    miningUnits: $('miningUnits'), miningUnitsVal: $('miningUnitsVal'),
+    miningHours: $('miningHours'), miningHoursVal: $('miningHoursVal'),
+    evOn: $('evOn'), evFields: $('evFields'), evModel: $('evModel'),
+    evMiles: $('evMiles'), evMilesVal: $('evMilesVal'),
+    region: $('region'), customSunWrap: $('customSunWrap'), customSun: $('customSun'),
+    season: $('season'), effSunOut: $('effSunOut'),
+    panelW: $('panelW'), panelWVal: $('panelWVal'),
+    derate: $('derate'), derateVal: $('derateVal'),
+    autonomy: $('autonomy'), autonomyVal: $('autonomyVal'),
+    panelCountOut: $('panelCountOut'), powerwallCountOut: $('powerwallCountOut'),
+    statTotalKwh: $('statTotalKwh'), statPeakKw: $('statPeakKw'),
+    statArrayKw: $('statArrayKw'), statArraySub: $('statArraySub'),
+    statBattKwh: $('statBattKwh'), statBattSub: $('statBattSub'),
+    costPanels: $('costPanels'), costBattery: $('costBattery'), costTotal: $('costTotal'),
+    stackbar: $('stackbar'), barLegend: $('barLegend'),
+    feasibilityNote: $('feasibilityNote'),
+  };
+
+  const MINER_W = 3500;
+  const EV_WH_PER_MILE = 250;
+  const EV_SPECS = { sr: {kwh:57.5, kw:7.7}, lr: {kwh:82, kw:11.5} };
+  const PANEL_COST_PER_W = 2.60;
+  const BATTERY_COST_PER_KWH = 998;
+  const POWERWALL_KWH = 13.5;
+  const DOD = 0.90;
+
+  function fmt(n, d=1){ return Number(n).toLocaleString(undefined, {maximumFractionDigits:d, minimumFractionDigits:0}); }
+
+  function recalc(){
+    // toggles
+    els.miningFields.classList.toggle('disabled-fade', !els.miningOn.checked);
+    els.evFields.classList.toggle('disabled-fade', !els.evOn.checked);
+    els.customSunWrap.style.display = els.region.value === 'custom' ? 'flex' : 'none';
+
+    // labels
+    els.homeKwhVal.textContent = fmt(els.homeKwh.value,0) + ' kWh/day';
+    els.miningUnitsVal.textContent = els.miningUnits.value;
+    els.miningHoursVal.textContent = els.miningHours.value + ' h';
+    els.evMilesVal.textContent = els.evMiles.value + ' mi';
+    els.panelWVal.textContent = els.panelW.value + ' W';
+    els.derateVal.textContent = Math.round(els.derate.value*100) + '%';
+    els.autonomyVal.textContent = els.autonomy.value + ' d';
+
+    // loads
+    const homeKwh = Number(els.homeKwh.value);
+
+    let miningKwh = 0, miningPeakKw = 0;
+    if (els.miningOn.checked) {
+      const units = Number(els.miningUnits.value);
+      const hours = Number(els.miningHours.value);
+      miningKwh = units * MINER_W * hours / 1000;
+      miningPeakKw = units * MINER_W / 1000;
+    }
+
+    let evKwh = 0, evPeakKw = 0;
+    if (els.evOn.checked) {
+      const spec = EV_SPECS[els.evModel.value];
+      const miles = Number(els.evMiles.value);
+      evKwh = miles * EV_WH_PER_MILE / 1000;
+      evPeakKw = spec.kw;
+    }
+
+    // rough home peak: assume home baseline peaks around 30% of its daily kWh compressed into one hour-equivalent (HVAC+water heater+range overlap), floor 1.5kW
+    const homePeakKw = Math.max(1.5, homeKwh * 0.12);
+
+    const totalKwh = homeKwh + miningKwh + evKwh;
+    const peakKw = homePeakKw + miningPeakKw + evPeakKw; // conservative: assume worst-case overlap
+
+    // sun hours
+    let sunHours = els.region.value === 'custom' ? Number(els.customSun.value) : Number(els.region.value);
+    const seasonMult = Number(els.season.value);
+    const effSun = sunHours * seasonMult;
+    els.effSunOut.textContent = fmt(effSun,2) + ' hrs/day';
+
+    // array sizing
+    const derate = Number(els.derate.value);
+    const arrayKw = totalKwh / (effSun * derate);
+    const panelW = Number(els.panelW.value);
+    const panelCount = Math.ceil(arrayKw*1000 / panelW);
+    const roofSqft = panelCount * 20;
+    els.panelCountOut.textContent = `≈ ${panelCount} panels (${panelW}W each) · roughly ${fmt(roofSqft,0)} sq ft of roof/ground array.`;
+
+    // battery sizing
+    const autonomy = Number(els.autonomy.value);
+    const battKwh = (totalKwh * autonomy) / DOD;
+    const pwCount = Math.ceil(battKwh / POWERWALL_KWH);
+    els.powerwallCountOut.textContent = `≈ ${fmt(battKwh,0)} kWh usable ≈ ${pwCount} Powerwall-3-class unit${pwCount===1?'':'s'} (13.5 kWh each).`;
+
+    // stats
+    els.statTotalKwh.textContent = fmt(totalKwh,0) + ' kWh';
+    els.statPeakKw.textContent = fmt(peakKw,1) + ' kW';
+    els.statArrayKw.textContent = fmt(arrayKw,1) + ' kW';
+    els.statArraySub.textContent = `DC, ${panelCount} panels`;
+    els.statBattKwh.textContent = fmt(battKwh,0) + ' kWh';
+    els.statBattSub.textContent = `${pwCount} Powerwall-class unit${pwCount===1?'':'s'}`;
+
+    // costs
+    const panelCost = arrayKw*1000*PANEL_COST_PER_W;
+    const battCost = battKwh*BATTERY_COST_PER_KWH;
+    els.costPanels.textContent = '$' + fmt(panelCost,0);
+    els.costBattery.textContent = '$' + fmt(battCost,0);
+    els.costTotal.textContent = '$' + fmt(panelCost+battCost,0);
+
+    // stacked bar
+    const segs = [
+      {label:'Home baseline', kwh: homeKwh, color:'var(--series-1)'},
+      {label:'Bitcoin mining', kwh: miningKwh, color:'var(--series-2)'},
+      {label:'EV charging', kwh: evKwh, color:'var(--series-3)'},
+    ];
+    els.stackbar.innerHTML = '';
+    els.barLegend.innerHTML = '';
+    segs.forEach(s => {
+      const pct = totalKwh>0 ? (s.kwh/totalKwh*100) : 0;
+      const seg = document.createElement('div');
+      seg.className = 'seg';
+      seg.style.width = pct + '%';
+      seg.style.background = s.color;
+      seg.title = `${s.label}: ${fmt(s.kwh,1)} kWh/day (${fmt(pct,0)}%)`;
+      seg.textContent = pct > 12 ? `${fmt(s.kwh,0)} kWh` : '';
+      if (s.kwh <= 0) seg.setAttribute('data-empty','1');
+      els.stackbar.appendChild(seg);
+
+      const item = document.createElement('div');
+      item.className = 'item';
+      item.innerHTML = `<span class="swatch" style="background:${s.color}"></span>${s.label}: ${fmt(s.kwh,1)} kWh/day`;
+      els.barLegend.appendChild(item);
+    });
+
+    // feasibility note
+    let note, cls;
+    if (arrayKw <= 10 && battKwh <= 20) {
+      cls = 'good';
+      note = `<strong>This is a realistic residential system.</strong> A ${fmt(arrayKw,1)} kW array and ${fmt(battKwh,0)} kWh of storage is well within what installers do routinely — full off-grid independence is plausible here with good roof space and sun exposure.`;
+    } else if (arrayKw <= 25 && battKwh <= 60) {
+      cls = 'warn';
+      note = `<strong>This is a large-but-doable system.</strong> A ${fmt(arrayKw,1)} kW array (~${panelCount} panels) and ${fmt(battKwh,0)} kWh of storage will need serious roof/ground space and likely multiple battery units. Many people in this range stay grid-tied and use solar+battery to offset cost and add resilience, rather than going fully off-grid.`;
+    } else {
+      cls = 'crit';
+      note = `<strong>This is an industrial-scale system.</strong> A ${fmt(arrayKw,1)} kW array and ${fmt(battKwh,0)} kWh of storage is well beyond typical residential rooftop solar — this is the territory of dedicated ground-mount arrays and commercial-class inverters/batteries. Continuous loads like mining are usually the reason a scenario lands here: they demand power 24/7, so they need array + battery capacity sized for the worst (lowest-sun) day, not the average one.`;
+    }
+    els.feasibilityNote.className = 'callout ' + cls;
+    els.feasibilityNote.innerHTML = note;
+  }
+
+  ['input','change'].forEach(evt => {
+    document.querySelectorAll('input, select').forEach(el => el.addEventListener(evt, recalc));
+  });
+
+  recalc();
+})();
+</script>
+
+</body>
+</html>
