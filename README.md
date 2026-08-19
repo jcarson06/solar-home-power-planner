@@ -50,6 +50,24 @@ solar installer, not a final design.**
 
 Open `index.html` in any browser. That's the whole thing.
 
+## Deploying
+
+Hosted on Netlify at https://solar-power-planner.netlify.app
+
+Deploys are **manual** — this repo is not connected to Netlify's git
+integration, so pushing to GitHub does not redeploy. To publish changes:
+
+```sh
+npx netlify-cli deploy --prod
+```
+
+Run it from the project root; the folder is already linked to the site.
+(Use `npx` rather than a global install — `npm install -g` needs sudo here.)
+
+To switch to auto-deploy-on-push instead: Netlify dashboard → the site →
+Build & deploy → Link repository → GitHub. Leave the build command empty
+and the publish directory as `.`
+
 ## Sources
 
 - [EIA — average household electricity use](https://www.eia.gov/tools/faqs/faq.php?id=97&t=3)
